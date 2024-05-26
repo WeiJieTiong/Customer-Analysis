@@ -43,19 +43,19 @@ class Face_recognize:
                     matchedIdxs = [i for (i, b) in enumerate(matches) if b]
                     counts = {}
                     for i in matchedIdxs:
-                        name = data["names"][i]                           #每一个在database里 encode face 的都有名的， 从那里拿回名罢了
-                        counts[name] = counts.get(name, 0) + 1            #exp. count = {'owen_grady' : 1}    0是default value in case 找不到
+                        name = data["names"][i]
+                        counts[name] = counts.get(name, 0) + 1
                     name = max(counts, key=counts.get)
 
-                    for i, search_name in enumerate(data.get('names')):            #找到跟recognize的名字 一样
+                    for i, search_name in enumerate(data.get('names')):
                         if search_name == name:
-                            gender = data["genders"][i]             # 根据名字的顺序拿到gender
+                            gender = data["genders"][i]
 
 
                 else:                       #if gt face but dont recognise in database
                     name = 'newcustomer' + f' { self.j}'
                     # print( self.j)
-                    gender_object = Gender(rgb_image)                #传多一点details 那张照片 rather than 只有脸
+                    gender_object = Gender(rgb_image)
                     gender = gender_object.gender_classification()
                     self.j += 1                 #for next customer
 

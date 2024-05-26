@@ -3,7 +3,7 @@ from human_tracking.trackableobject import TrackableObject
 from recognize_face import Face_recognize
 from ultralytics import YOLO
 import numpy as np
-import imutils  # A series of convenience functions to make basic image processing functions such as translation, rotation, resizing...
+import imutils
 from time import time
 import dlib  # A toolkit for making real world machine learning and data analysis applications
 import cv2

@@ -12,8 +12,8 @@ class CentroidTracker:
         '''
 
         self.nextObjectID = 0
-        self.objects = OrderedDict()  # record centroid          self.objects = {nextobjectID: centroid}    OrderedDict（） 也等于 {}
-        self.disappeared = OrderedDict()  # record 你disappear的时间
+        self.objects = OrderedDict()  # record centroid
+        self.disappeared = OrderedDict()  # record disappear time
         # store the number of maximum consecutive frames a given object is allowed to be marked as "disappeared" until we
         # need to deregister the object from tracking
         self.maxDisappeared = maxDisappeared
@@ -25,7 +25,7 @@ class CentroidTracker:
     def register(self, centroid):
         # when registering an object we use the next available object ID to store the centroid
         self.objects[self.nextObjectID] = centroid                        #self.objects = {nextObjectID : centroid}
-        self.disappeared[self.nextObjectID] = 0                           #self.disappeared = {nextobjectID :0}    记录消失的frame
+        self.disappeared[self.nextObjectID] = 0                           #self.disappeared = {nextobjectID :0}    to record disappeared frame
         self.nextObjectID += 1
 
     def deregister(self, objectID):
@@ -35,18 +35,17 @@ class CentroidTracker:
 
     def update(self, rects):
         # check to see if the list of input bounding box rectangles is empty
-        if len(rects) == 0:  # 如果一个人都没有出现的话
+        if len(rects) == 0:
             # loop over any existing tracked objects and mark them as disappeared
-            for objectID in list(self.disappeared.keys()):           #在消失了的id list里逐一循环
+            for objectID in list(self.disappeared.keys()):
                 self.disappeared[objectID] += 1                    #如果持续消失 就增加消失的frame
                 # if we have reached a maximum number of consecutive frames where a given object has been marked as missing, deregister it
                 if self.disappeared[objectID] > self.maxDisappeared:
                     self.deregister(objectID)
-            # return early as there are no centroids or tracking info to update 因为 deregister 了
             return self.objects
 
         # initialize an array of input centroids for the current frame
-        inputCentroids = np.zeros((len(rects), 2), dtype="int")     #全部initialise with0先 [[0 0],]
+        inputCentroids = np.zeros((len(rects), 2), dtype="int")
         # loop over the bounding box rectangles
         for (i, (startX, startY, endX, endY)) in enumerate(rects):
             # use the bounding box coordinates to derive the centroid
@@ -66,9 +65,7 @@ class CentroidTracker:
             objectCentroids = list(self.objects.values()) #objectCentroids = [centroid, ]
             # compute the distance between each pair of object centroids and input centroids, respectively -- our
             # goal will be to match an input centroid to an existing object centroid
-            D = dist.cdist(np.array(objectCentroids), inputCentroids)   # array([[0.82421549, 0.32755369, 0.33198071],
-                                                                         # [0.72642889, 0.72506609, 0.17058938]])
-
+            D = dist.cdist(np.array(objectCentroids), inputCentroids)
 
             # in order to perform this matching we must (1) find the smallest value in each row and then (2) sort the row
             # indexes based on their minimum values so that the row with the smallest value is at the *front* of the index list
@@ -79,7 +76,7 @@ class CentroidTracker:
 
             # in order to determine if we need to update, register, or deregister an object we need to keep track of which
             # of the rows and column indexes we have already examined
-            usedRows = set()        #每一次进入update 函数 都会在这里reinitialise
+            usedRows = set()
             usedCols = set()
             # loop over the combination of the (row, column) index tuples
             for (row, col) in zip(rows, cols):
@@ -95,19 +92,19 @@ class CentroidTracker:
 
                 # otherwise, grab the object ID for the current row, set its new centroid, and reset the disappeared counter
                 objectID = objectIDs[row]
-                self.objects[objectID] = inputCentroids[col]                   #replace old centroid with new current centroid
+                self.objects[objectID] = inputCentroids[col]          #replace old centroid with new current centroid
                 self.disappeared[objectID] = 0
                 # indicate that we have examined each of the row and column indexes, respectively
                 usedRows.add(row)
                 usedCols.add(col)
 
             # compute both the row and column index we have NOT yet examined
-            unusedRows = set(range(0, D.shape[0])).difference(usedRows)         #找出还没用过的row数量
-            unusedCols = set(range(0, D.shape[1])).difference(usedCols)         #找出还没用过的column数量
+            unusedRows = set(range(0, D.shape[0])).difference(usedRows)
+            unusedCols = set(range(0, D.shape[1])).difference(usedCols)
 
             # in the event that the number of object centroids is equal or greater than the number of input centroids
             # we need to check and see if some of these objects have potentially disappeared
-            if D.shape[0] >= D.shape[1]:       #多少个row 对应原本有多少个object ， 多少个column 对应现在还有多少个object
+            if D.shape[0] >= D.shape[1]:
                 # loop over the unused row indexes
                 for row in unusedRows:
                     # grab the object ID for the corresponding row
@@ -128,18 +125,3 @@ class CentroidTracker:
         # return the set of trackable objects
         return self.objects
 
-
-
-# c1 = CentroidTracker()
-# print(c1.__dict__)
-# c1.register(220)
-# print(c1.__dict__)
-# c1.register(420)
-# print(c1.__dict__)
-#
-# c2 = CentroidTracker()
-# print(c2.__dict__)
-# c2.register(230)
-# print(c2.__dict__)
-# c2.register(450)
-# print(c2.__dict__)
